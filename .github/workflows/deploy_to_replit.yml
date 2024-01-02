@@ -41,5 +41,5 @@ jobs:
         with:
           github_token: ${{ secrets.PERSON_TOKEN }}
           branch: 'main'
-          repository: 'conscloud/subconverter_to_replit'
+          repository: 'conscloud/subconverter_on_replit'
           
