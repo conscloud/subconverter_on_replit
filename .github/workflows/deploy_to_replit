@@ -1,0 +1,43 @@
+# This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
+name: Deploy to replit
+
+on:
+  push:
+    branches: [ "master" ]
+  # pull_request:
+  #   branches: [ "master" ]
+permissions:
+  contents: write
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@main
+      - name: download package
+        run: |
+          ver=`wget -qO- -t1 -T2 "https://api.github.com/repos/asdlokj1qpi23/subconverter/releases/latest" | grep "tag_name" | head -n 1 | awk -F ":" '{print $2}' | sed 's/\"//g;s/,//g;s/ //g'`
+          wget -q https://github.com/asdlokj1qpi23/subconverter/releases/download/${{ver}}/subconverter_linux64.tar.gz
+          tar -zxvf subconverter_linux64.tar.gz
+      - name: Commit files
+        id: commit-files
+        run: |
+          if [ -n "$(git status --porcelain anti-ad-clash.list)" ]; then
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add .
+            git commit -m "pull newest release"
+            echo "hasChange=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes detected"
+          fi   
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        if: ${{ steps.commit-files.outputs.hasChange == 'true' }}
+        with:
+          github_token: ${{ secrets.PERSON_TOKEN }}
+          branch: 'main'
+          repository: 'conscloud/anti-ad-clash'
+          
